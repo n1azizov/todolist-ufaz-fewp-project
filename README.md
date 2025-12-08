@@ -76,8 +76,11 @@ No installation, server, or dependencies are required.
 
 ## 🧑‍💻 Author
 **Nadir Azizov**  
+
 n.azizov@ufaz.az
+
 nadirabulfazazizov@gmail.com
+
 UFAZ — FEWP Project (2025)
 
 ---
