@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- JSON DATA -->
+  <script>
+    let priorityList = [
+      { idPriority: 1, labelPriority: "Very Low"  },
+      { idPriority: 2, labelPriority: "Low"       },
+      { idPriority: 3, labelPriority: "Medium"    },
+      { idPriority: 4, labelPriority: "High"      },
+      { idPriority: 5, labelPriority: "Critical"  }
+    ];
+
+    let statusList = [
+      { idStatus: 1, status: "not ready"   },
+      { idStatus: 2, status: "in progress" },
+      { idStatus: 3, status: "done"        }
+    ];
+
+    let colorList = [
+      { idColor: 1, colorTag: "Red"    },
+      { idColor: 2, colorTag: "Green"  },
+      { idColor: 3, colorTag: "Blue"   },
+      { idColor: 4, colorTag: "Yellow" }
+    ];
+
+    let categoryList = [
+      { idCategory: 1, category: "Home"       },
+      { idCategory: 2, category: "Work"       },
+      { idCategory: 3, category: "University" }
+    ];
+
+    /* SAFELY LOAD TASKS */
+    const STORAGE_KEY = "taskList";
+    let taskList = [];
+
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) taskList = parsed;
+      }
+    } catch (e) {
+      console.warn("LocalStorage corrupted, resetting...");
+      localStorage.removeItem(STORAGE_KEY);
+      taskList = [];
+    }
+
+    /* Safe date extraction */
+    function extractDate(val) {
+      if (!val || typeof val !== "string") return "";
+      return val.substring(0, 10);
+    }
+
+    function colorCircle(name) {
+      if (!name) return "⚪";
+      const c = name.toLowerCase();
+      if (c === "red") return "🔴";
+      if (c === "green") return "🟢";
+      if (c === "blue") return "🔵";
+      if (c === "yellow") return "🟡";
+      return "⚪";
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --bg-soft: #e5edfb;
+      --card: #ffffff;
+      --border: #e1e4ea;
+      --ink: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-soft: #e0edff;
+      --danger: #dc2626;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--bg-soft), var(--bg));
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1080px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.1);
+    }
+
+    header h1 { margin: 0 0 4px; font-size: 1.35rem; }
+    header p  { margin: 3px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+    .back-row { margin: 12px 0 18px; }
+    .back-link {
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      text-decoration: none;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+    .back-link:hover { background: #d6e4ff; }
+
+    .filters {
+      margin-top: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .filters label {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    select,
+    input[type="date"] {
+      border-radius: 999px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="date"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.5);
+      background: #ffffff;
+    }
+
+    .table-wrapper { overflow-x: auto; border-radius: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      min-width: 780px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: middle;
+      color: #333;
+    }
+
+    th {
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    tbody tr:hover { background: #eef4ff; }
+
+    /* Priority badge improvements */
+    .badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-priority-1 { background: #e5e7eb; color:#374151; }
+    .badge-priority-2 { background: #dbeafe; color:#1e40af; }
+    .badge-priority-3 { background: #fef9c3; color:#854d0e; }
+    .badge-priority-4 { background: #fee2e2; color:#b91c1c; }
+    .badge-priority-5 { background: #ffe4f0; color:#a21caf; }
+
+    /* Status pill improvements */
+    .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .pill-status-1 { background:#fef3c7; color:#92400e; }
+    .pill-status-2 { background:#dbeafe; color:#1d4ed8; }
+    .pill-status-3 { background:#dcfce7; color:#166534; }
+
+    /* Action buttons */
+    .status-btn {
+      border-radius: 999px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .status-btn.is-current {
+      background: #dbeafe;
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .delete-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ffe5e5;
+      color:#b91c1c;
+      border:1px solid #ffbaba;
+      cursor:pointer;
+    }
+
+    .delete-btn:hover { background:#ffd4d4; }
+
+    /* Subtasks panel */
+    .subtasks-panel {
+      background:#f9fafb;
+      padding:12px 16px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      margin:6px 0;
+    }
+
+    .subtask-item {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:5px 0;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      .filters {
+        flex-direction: column;
+        gap: 6px;
+      }
+      table { font-size: 0.78rem; min-width: 650px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <header>
+    <h1>Task Summary</h1>
+    <p>View and manage all tasks stored in your browser.</p>
+  </header>
+
+  <div class="back-row">
+    <a class="back-link" href="index.html">← Back to task creation</a>
+  </div>
+
+  <div class="filters">
+    <label>Status:
+      <select id="statusFilter" onchange="buildTaskTable()">
+        <option value="active">Active (not done)</option>
+        <option value="all">All</option>
+        <option value="1">Not ready</option>
+        <option value="2">In progress</option>
+        <option value="3">Done</option>
+      </select>
+    </label>
+
+    <label>Priority:
+      <select id="priorityFilter" onchange="buildTaskTable()">
+        <option value="all">All</option>
+        <option value="1">Very Low</option>
+        <option value="2">Low</option>
+        <option value="3">Medium</option>
+        <option value="4">High</option>
+        <option value="5">Critical</option>
+      </select>
+    </label>
+
+    <label>Due from:
+      <input type="date" id="fromDate" onchange="buildTaskTable()">
+    </label>
+
+    <label>to:
+      <input type="date" id="toDate" onchange="buildTaskTable()">
+    </label>
+
+    <label>Sort:
+      <select id="sortBy" onchange="buildTaskTable()">
+        <option value="none">None</option>
+        <option value="dueAsc">Due ↑</option>
+        <option value="dueDesc">Due ↓</option>
+        <option value="createdAsc">Created ↑</option>
+        <option value="createdDesc">Created ↓</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Color</th>
+        <th>Subtasks</th>
+        <th>Created</th>
+        <th>Due</th>
+        <th>Status actions</th>
+        <th>Delete</th>
+      </tr>
+      </thead>
+      <tbody id="taskTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function buildTaskTable() {
+  const tbody = document.getElementById("taskTableBody");
+  tbody.innerHTML = "";
+
+  let filtered = taskList
+    .filter(t => t && typeof t === "object" && t.idTask && t.titleTask);
+
+  const statusF   = document.getElementById("statusFilter").value;
+  const priorityF = document.getElementById("priorityFilter").value;
+  const fromF     = document.getElementById("fromDate").value;
+  const toF       = document.getElementById("toDate").value;
+  const sortF     = document.getElementById("sortBy").value;
+
+  if (statusF === "active") {
+    filtered = filtered.filter(t => t.status != 3);
+  } else if (statusF !== "all") {
+    filtered = filtered.filter(t => String(t.status) === statusF);
+  }
+
+  if (priorityF !== "all") {
+    filtered = filtered.filter(t => String(t.priority) === priorityF);
+  }
+
+  if (fromF) filtered = filtered.filter(t => extractDate(t.dueDate) >= fromF);
+  if (toF)   filtered = filtered.filter(t => extractDate(t.dueDate) <= toF);
+
+  if (sortF === "dueAsc") {
+    filtered.sort((a,b)=> extractDate(a.dueDate).localeCompare(extractDate(b.dueDate)));
+  } else if (sortF === "dueDesc") {
+    filtered.sort((a,b)=> extractDate(b.dueDate).localeCompare(extractDate(a.dueDate)));
+  } else if (sortF === "createdAsc") {
+    filtered.sort((a,b)=> extractDate(a.createdAt).localeCompare(extractDate(b.createdAt)));
+  } else if (sortF === "createdDesc") {
+    filtered.sort((a,b)=> extractDate(b.createdAt).localeCompare(extractDate(a.createdAt)));
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:10px;color:#64748b;">
+      No tasks with current filters.
+    </td></tr>`;
+    return;
+  }
+
+  filtered.forEach(task => {
+    const categoryObj = categoryList.find(c => c.idCategory == task.category);
+    const priorityObj = priorityList.find(p => p.idPriority == task.priority);
+    const statusObj   = statusList.find(s => s.idStatus == task.status);
+    const colorObj    = colorList.find(c => c.idColor == task.color);
+
+    const priorityHTML = `<span class="badge badge-priority-${priorityObj?.idPriority}">
+      ${priorityObj?.labelPriority || "Unknown"}
+    </span>`;
+
+    const statusHTML = `<span class="pill pill-status-${statusObj?.idStatus}">
+      ${statusObj?.status || "Unknown"}
+    </span>`;
+
+    const colorHTML = `<span style="font-size:1.1rem;">
+      ${colorCircle(colorObj?.colorTag)} 
+    </span> ${colorObj?.colorTag || ""}`;
+
+    const mainRowId = "row-" + task.idTask;
+    const subRowId  = "sub-" + task.idTask;
+
+    const mainRow = `
+      <tr id="${mainRowId}" onclick="toggleSubtasks('${task.idTask}')">
+        <td>${task.idTask}</td>
+        <td>${task.titleTask}</td>
+        <td>${categoryObj?.category || ""}</td>
+        <td>${priorityHTML}</td>
+        <td>${statusHTML}</td>
+        <td>${colorHTML}</td>
+        <td>${task.subtasks?.length || 0}</td>
+        <td>${extractDate(task.createdAt)}</td>
+        <td>${extractDate(task.dueDate)}</td>
+        <td>
+          ${statusList.map(st => `
+            <button type="button"
+              class="status-btn ${task.status == st.idStatus ? "is-current" : ""}"
+              onclick="event.stopPropagation(); changeStatus('${task.idTask}', ${st.idStatus})"
+              ${task.status == st.idStatus ? "disabled" : ""}>
+              ${st.status}
+            </button>
+          `).join("")}
+        </td>
+        <td>
+          <button type="button"
+            class="delete-btn"
+            onclick="event.stopPropagation(); deleteTask('${task.idTask}')">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML("beforeend", mainRow);
+
+    const subRow = `
+      <tr id="${subRowId}" style="display:none;">
+        <td colspan="11">
+          <div class="subtasks-panel">
+            ${renderSubtasks(task)}
+          </div>
+        </td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML("beforeend", subRow);
+  });
+}
+
+function renderSubtasks(task) {
+  if (!task.subtasks || task.subtasks.length === 0) {
+    return `<em style="color:#6b7280;">No subtasks</em>`;
+  }
+  return task.subtasks.map(st => `
+    <div class="subtask-item">
+      <input type="checkbox"
+        ${st.completed ? "checked" : ""}
+        onclick="toggleSubtask('${task.idTask}', '${st.idsubTask}')">
+      <span>${st.title}</span>
+    </div>
+  `).join("");
+}
+
+function toggleSubtasks(idTask) {
+  const sub = document.getElementById("sub-" + idTask);
+  if (!sub) return;
+  sub.style.display = (sub.style.display === "none" || sub.style.display === "") ? "table-row" : "none";
+}
+
+function toggleSubtask(idTask, idsubTask) {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  let list = stored ? JSON.parse(stored) : [];
+
+  const task = list.find(t => t.idTask === idTask);
+  if (!task || !task.subtasks) return;
+
+  const sub = task.subtasks.find(s => s.idsubTask === idsubTask);
+  if (!sub) return;
+
+  sub.completed = !sub.completed;
+
+  const allDone = task.subtasks.length > 0 && task.subtasks.every(s => s.completed);
+  if (allDone) task.status = 3;
+  else task.status = 2;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  taskList = list;
+  buildTaskTable();
+
+  const subRow = document.getElementById("sub-" + idTask);
+  if (subRow) subRow.style.display = "table-row";
+}
+
+function changeStatus(idTask, newStatus) {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  let list = stored ? JSON.parse(stored) : [];
+
+  const task = list.find(t => t.idTask === idTask);
+  if (!task) return;
+
+  task.status = newStatus;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  taskList = list;
+  buildTaskTable();
+}
+
+function deleteTask(idTask) {
+  if (!confirm("Delete this task?")) return;
+
+  let stored = localStorage.getItem(STORAGE_KEY);
+  let list = stored ? JSON.parse(stored) : [];
+
+  list = list.filter(t => t.idTask !== idTask);
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  taskList = list;
+  buildTaskTable();
+}
+
+document.onreadystatechange = function () {
+  if (document.readyState === "complete") buildTaskTable();
+};
+</script>
+
+</body>
+</html>
