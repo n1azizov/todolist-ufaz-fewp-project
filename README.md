@@ -1,62 +1,46 @@
-# ✅ **To-Do List Web Application**  
-*A clean, mobile-friendly task manager built using HTML, CSS, and JavaScript.*
-
-This project is a browser-based To-Do List application that allows users to create, organize, and manage tasks with priorities, statuses, categories, colors, and subtasks. All data is stored locally in the user's browser using **localStorage** — no backend required.
-
-## 🚀 **Features**
-
-### 🔹 Task Creation Page  
-*(See: `index.html`)*  
-Users can create detailed tasks with:
-
-- **Title, Description, Due Date**
-- **Priority levels** (Very Low → Critical)
-- **Status** (Not Ready, In Progress, Done)
-- **Categories** (Home, Work, University)
-- **Color tags** with emoji indicators
-- **Subtasks** (one per line, auto-generated IDs)
-- All fields validated before saving  
-- Automatically stored in **localStorage**
+# 📌 To-Do List Web Application  
+A modern, fully client-side task management system featuring task creation, filtering, sorting, subtasks, color tagging, and persistent storage using `localStorage`.
 
 ---
 
-### 🔹 Task Summary / Dashboard  
-*(See: `task-summary.html`)*  
-A dynamic task management interface:
+## 🚀 Features
 
-- Full task table with sorting & filtering:
-  - By **status**
-  - By **priority**
-  - By **date range**
-  - By **sorting order** (created or due date)
-- Collapsible subtasks panel under each task
-- Inline status-changing buttons
-- Delete button for each task
-- Color tags displayed visually (🔴🟢🔵🟡)
-- Fully mobile-responsive (horizontal scroll enabled)
+### **Task Creation Page**
+- Create tasks with:
+  - Title, description, due date  
+  - Priority, status, category  
+  - Optional color tag  
+  - Optional subtasks (one per line)
+- Auto-generated task IDs
+- Subtask ID generation based on parent task
+- Clean, responsive UI with real-time validation
+- **Toast notification** confirming successful task creation
+
+### **Task Summary Page**
+- Dynamic task table with:
+  - Category, priority badges, status pills  
+  - Color indicators (🔴 🟢 🔵 🟡)  
+  - Subtask count  
+  - Created and due dates
+- Interactive features:
+  - Expand/collapse subtasks by clicking on a row  
+  - Update task status using action buttons  
+  - Filter tasks by status, priority, date range  
+  - Sort tasks by due/creation date (ascending/descending)  
+  - Delete tasks with confirmation
+- Automatic task status update when all subtasks are completed
+- Safe handling of corrupted storage and validation checks
 
 ---
 
-## 🧠 **Technical Highlights**
-
-- Written using **pure HTML, CSS, and JavaScript** — no frameworks  
-- Uses **localStorage** to persist tasks between sessions  
-- Auto-generated task IDs & subtask IDs  
-- Custom UI components with badges, pills, and responsive design  
-- Clean and accessible layout  
-- Fully functional CRUD operations (create, update, delete)  
-- Multiple inline `<script>` blocks handling data injection  
-- All dataset lists (priority, status, categories, color tags) stored in JS arrays  
-
----
-
-## 📱 **Mobile Friendly**
-Both pages are optimized for:
-
-- Small screens  
-- Responsive layouts  
-- Scrollable tables  
-- Touch-friendly buttons  
+## 🛠️ Technical Highlights
+- Fully client-side — **no backend required**
+- Reliable data persistence using `localStorage`
+- Structured JSON task model with validation
+- Modular, readable logic for rendering and updates
+- Responsive UI for desktop and mobile
+- Separation of concerns between data logic, UI logic, and styling
+- Defensive coding: safe date handling, event propagation control, and error tolerance
 
 ---
 
@@ -68,33 +52,34 @@ Both pages are optimized for:
 │── README.md # Project documentation
 ```
 
----
-
-## 🛠️ **How It Works**
-
-1. User fills the form on `index.html`
-2. JavaScript validates & converts the data into a task object
-3. Task is stored in localStorage under key `"taskList"`
-4. `task-summary.html` reads this data and builds an interactive table
-5. User can:
-   - Update status  
-   - Expand subtasks  
-   - Mark subtasks as complete  
-   - Delete tasks  
-6. All changes update localStorage live
 
 ---
 
-## 🌟 **Author**
+## 🔧 How to Run
+1. Open `index.html` in any modern browser  
+2. Fill out and save a task  
+3. Click **"View task summary"** to open the management page  
+4. Filter, sort, update status, and expand subtasks interactively  
 
+No installation, server, or dependencies are required.
+
+---
+
+## 📚 Future Improvements (Do not wait for them)
+- Task export/import (JSON)
+- Editable subtasks
+- Dark mode
+- Search bar
+- Drag-and-drop ordering
+
+---
+
+## 🧑‍💻 Author
 **Nadir Azizov**  
 n.azizov@ufaz.az
 nadirabulfazazizov@gmail.com
-UFAZ – Computer Science  
-2025 L1 S1 Front-End Web Programming Project
+UFAZ — FEWP Project (2025)
 
 ---
-
-## 📜 License
 
 This project is free to use for learning and academic purposes.
