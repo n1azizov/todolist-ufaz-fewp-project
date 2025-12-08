@@ -75,13 +75,10 @@ No installation, server, or dependencies are required.
 ---
 
 ## 🧑‍💻 Author
-**Nadir Azizov**  
-
-n.azizov@ufaz.az
-
-nadirabulfazazizov@gmail.com
-
-UFAZ — FEWP Project (2025)
+**Nadir Azizov**<br>
+n.azizov@ufaz.az<br>
+nadirabulfazazizov@gmail.com<br>
+UFAZ — FEWP Project (2025)<br>
 
 ---
 
